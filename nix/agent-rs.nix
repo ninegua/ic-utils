@@ -6,10 +6,8 @@ rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [ pkg-config ];
   src = builtins.fetchGit {
     url = "https://github.com/ninegua/agent-rs";
-    ref = "main";
+    rev = "0794b530ce457418850e239aed3c3b29bec69da6";
   };
   cargoSha256 = "0616yijw98bp6hxlg1ijg8ir09f9rsprw9ni643bjbd6109vn4g7";
-  #cargoBuildOptions = x: x ++ [ "-p" "icx" "-p" "icx-proxy" ];
-  #cargoTestOptions = x: x ++ [ "-p" "icx" "-p" "icx-proxy" ];
   verifyCargoDeps = true;
 }

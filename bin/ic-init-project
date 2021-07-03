@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -e -o pipefail
+
+USAGE="USAGE: $0 <project_dir>"
+
+DIR=$1
+test -z "$DIR" && echo $USAGE && exit 1
+test -d "$DIR" || (echo "Error: directory '$DIR' does not exist" && exit 1)
+
+UTIL=$(realpath "$(dirname $0)/..")
+export PATH="$UTIL/bin:$PATH"
+
+MAKEFILE="$DIR/Makefile"
+test -f "$MAKEFILE" && echo "Error: $MAKEFILE already exists. Please remove it and rerun this command." && exit 1
+
+cat > "$MAKEFILE" <<END
+UTIL_DIR=$UTIL
+include \$(UTIL_DIR)/share/mk/inc.mk
+
+END
+cat "$UTIL/share/mk/top.mk" >> "$MAKEFILE"
+
+cat <<END 
+Makefile is successfully created. Next steps:
+
+- If you are setting up Motoko project, do:
+
+    cd $DIR
+    make init-vessel
+
+- If you want to play with a "hello world" example, do:
+
+    cd $DIR
+    make init-hello
+
+Have fun!
+END

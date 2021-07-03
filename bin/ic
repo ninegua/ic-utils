@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -e -o pipefail
+
+PEM_FILE=${PEM_FILE:-$(echo $PEM_OPT|sed -e 's/^[^ ]* //')}
+PRINCIPAL=$(quill --pem-file $PEM_FILE public-ids|grep Principal|sed -e 's/.*: //')
+
+PEM_OPT="--pem $PEM_FILE"
+export PEM_OPT
+
+UTIL=$(dirname $(realpath $0))/..
+export PATH="$UTIL/bin:$PATH"
+
+DID_OPT="--candid $UTIL/share/did/ic.did"
+export DID_OPT
+
+IC_MANAGEMENT_ID=aaaaa-aa
+
+function canister_settings() {
+  echo "record { controllers = opt vec { principal \"$PRINCIPAL\" } }"
+}
+
+function install_code() {
+  local canister_id=$1
+  local bytes=$(xxd -p "$2"|sed -e 's/../\\&/g'|tr -d '\n')
+  echo "(record {
+           mode = variant { $INSTALL_MODE }; 
+           canister_id = principal \"$canister_id\";
+           wasm_module = blob \"$bytes\";
+           arg = blob \"\"; })" | canister update $IC_MANAGEMENT_ID install_code -
+}
+
+function canister_status() {
+  local arg="record { canister_id = principal \"$1\"; }"
+  canister update $IC_MANAGEMENT_ID canister_status "($arg)"
+}
+
+function provisional_create_canister() {
+  local arg="record {
+               amount = opt 10_000_000_000_000;
+               settings = opt $(canister_settings);
+             }"
+  canister update $IC_MANAGEMENT_ID provisional_create_canister_with_cycles "($arg)"
+}
+
+function provisional_top_up_canister() {
+  local arg="record { canister_id: principal \"$1\"; amount: $2 }"
+  canister update $IC_MANAGEMENT_ID provisional_top_up_canister "($arg)"
+}
+
+method=$1
+shift
+case "$method" in
+  install_code) install_code $*;;
+  canister_status) canister_status $*;;
+  provisional_create_canister) provisional_create_canister $*;;
+  provisional_top_up_canister) provisional_top_up_canister $*;;
+  *) echo "Unknown or unsuported method '$method'" && exit 1;;
+esac

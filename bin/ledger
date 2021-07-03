@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+set -e -o pipefail
+
+PEM_FILE=${PEM_FILE:-$(echo $PEM_OPT|sed -e 's/^[^ ]* //')}
+PRINCIPAL=$(quill --pem-file $PEM_FILE public-ids|grep Principal|sed -e 's/.*: //')
+ACCOUNT=$(quill --pem-file $PEM_FILE public-ids|grep Account|sed -e 's/.*: //')
+
+PEM_OPT="--pem $PEM_FILE"
+export PEM_OPT
+
+UTIL=$(dirname $(realpath $0))/..
+export PATH="$UTIL/bin:$PATH"
+export PROTO_OPT="--proto_path=$UTIL/share/proto"
+
+DID_OPT="--candid $UTIL/share/did/ledger.did"
+export DID_OPT
+
+IC_LEDGER_ID=ryjl3-tyaaa-aaaaa-aaaba-cai
+IC_CYCLES_MINTING_ID=rkp4c-7iaaa-aaaaa-aaaca-cai
+MEMO_CREATE_CANISTER=0x41455243
+MEMO_TOP_UP_CANISTER=0x50555054
+TRANSACTION_FEE=10000
+
+function principal_to_subaccount() {
+  principal=$1
+  principalHex=$(icx principal-convert --to-hex $principal 2>&1|sed -e 's/.*: //')
+  len=$(echo -n $principalHex|wc -m)
+  lenHex=$(printf "%02x" $((len/2)))
+  padding=$((62-len))
+  paddingHex=$(eval printf "0%.s" {1..$padding})
+  echo "$lenHex$principalHex$paddingHex"
+}
+
+function principal_to_account() {
+  principal=$1
+  subaccount=${2:-$(printf "0%.s" {1..64})}
+  magicHex=$(printf "\naccount-id"|xxd -p)
+  principalHex=$(icx principal-convert --to-hex $principal 2>&1|sed -e 's/.*: //')
+  sha224=$(echo -n $magicHex$principalHex$subaccount|xxd -r -p|sha224sum|sed -e 's/ .*//')
+  crc32=$(echo -n $sha224|xxd -r -p|gzip -c|tail -c8|od -A none -t x4 -N4 --endian=little|sed -e 's/ //g')
+  echo "$crc32$sha224"
+}
+
+function send_dfx() {
+  local memo=$1
+  local amount=$2
+  local subaccount=$3
+  local to=$4
+  local amount_e8s=$(printf "%.8f" "$amount" | sed -e 's/\.//;s/^0*//')
+  if [[ -z "$subaccount" ]]; then
+    subaccount=null
+  else
+    subaccount="opt vec {$(echo $subaccount|sed -e 's/../0x&;/g;s/,$//')}"
+  fi
+  local arg="record {
+         memo = $memo;
+         amount = record { e8s = $amount_e8s; };
+         fee = record { e8s = $TRANSACTION_FEE; };
+         from_subaccount = $subaccount;
+         to = \"$to\";
+       }"
+  canister update $IC_LEDGER_ID send_dfx "($arg)"
+}
+
+function notify_pb() {
+  local block_height=$(echo $1|sed -e 's/_//g')
+  local from_subaccount=$(echo -n $2|tr -d '\n'|sed -e 's/../\\x&/g')
+  local canister_id=$(icx principal-convert --to-hex $3 2>&1|sed -e 's/.*: //')
+  local to_canister=$(echo -n $canister_id|tr -d '\n'|sed -e 's/../\\x&/g')
+  local to_subaccount=$(echo -n $4|tr -d '\n'|sed -e 's/../\\x&/g')
+  local OUT=$(mktemp)
+  test -n "$from_subaccount" && from_subaccount="from_subaccount: {sub_account: \"$from_subaccount\"}"
+  test -n "$to_canister" && to_canister="to_canister: {serialized_id: \"$to_canister\"}"
+  test -n "$to_subaccount" && to_subaccount="to_subaccount: {sub_account: \"$to_subaccount\"}"
+  protoc "$PROTO_OPT" --encode=ic_ledger.pb.v1.NotifyRequest "$UTIL/share/proto/ic_ledger/pb/v1/types.proto" > $OUT <<END
+block_height: { height: $block_height }
+max_fee: { e8s: $TRANSACTION_FEE }
+$from_subaccount
+$to_canister
+$to_subaccount
+END
+  local arg=$(xxd -p $OUT|tr -d '\n')
+  echo "IC=\"$IC\"" "PEM_OPT=\"$PEM_OPT\"" 'ICX_ARG_OPT="--arg raw --output raw"' \
+    canister update $IC_LEDGER_ID notify_pb "$arg" > /dev/stderr
+  ICX_ARG_OPT="--arg raw --output raw" canister update $IC_LEDGER_ID notify_pb "$arg" > $OUT
+  cat $OUT |xxd -r -p| protoc "$PROTO_OPT" --decode=ic_ledger.pb.v1.NotifyResponse "$UTIL/share/proto/ic_ledger/pb/v1/types.proto"|sed -e 's/^ *//'|tr -d '\n'
+  rm $OUT
+}
+
+function create_canister() {
+  local principal=$1
+  local amount=$2
+  
+  echo Transfer $amount ICP from $principal to convert to cycles > /dev/stderr
+  local subaccount=$(principal_to_subaccount $principal)
+  local toaccount=$(principal_to_account $IC_CYCLES_MINTING_ID $subaccount)
+  local OUT=$(mktemp)
+  echo send_dfx $MEMO_CREATE_CANISTER $amount "" $toaccount > /dev/stderr
+  send_dfx $MEMO_CREATE_CANISTER $amount "" $toaccount > $OUT
+  local block_height=$(cat $OUT | sed -e 's/(\([0-9_]*\) :.*)/\1/g')
+  echo Notify CYCLES_MINTING_CANISTER to process block at $block_height > /dev/stderr
+  notify_pb $block_height "" "$IC_CYCLES_MINTING_ID" "$subaccount" > $OUT
+  if [[ "$(cat $OUT|cut -c1)" = 1 ]]; then
+    local octet=$(cat $OUT|sed -e 's/^[^"]*"//;s/"}//')
+    rm $OUT
+    local canister_id=$(icx principal-convert --from-hex $(printf "$octet"|xxd -p) 2>&1|sed -e 's/.*: //')
+    echo "Canister created with id: $canister_id" > /dev/stderr
+    echo $canister_id
+  else
+    cat $OUT > /dev/stderr
+    rm $OUT
+    exit 1
+  fi
+}
+
+function topup_canister() {
+  local canister_id=$1
+  local amount=$2
+  
+  echo Top-up canister $canister_id with $amount ICP converted to cycles > /dev/stderr
+  local subaccount=$(principal_to_subaccount $canister_id)
+  local toaccount=$(principal_to_account $IC_CYCLES_MINTING_ID $subaccount)
+  local OUT=$(mktemp)
+  echo send_dfx $MEMO_TOP_UP_CANISTER $amount "" $toaccount > /dev/stderr
+  send_dfx $MEMO_TOP_UP_CANISTER $amount "" $toaccount > $OUT
+  local block_height=$(cat $OUT | sed -e 's/(\([0-9_]*\) :.*)/\1/g')
+
+  echo Notify CYCLES_MINTING_CANISTER to process block at $block_height > /dev/stderr
+  notify_pb $block_height "" "$IC_CYCLES_MINTING_ID" "$subaccount" > $OUT
+  if [[ "$(cat $OUT|cut -c1)" = 3 ]]; then
+    rm $OUT
+    echo "Canister topped up." > /dev/stderr
+  else
+    cat $OUT > /dev/stderr
+    rm $OUT
+    exit 1
+  fi
+}
+
+function balance() {
+  local arg="record { account = \"$1\"; }"
+  canister query $IC_LEDGER_ID account_balance_dfx "($arg)"
+}
+
+function send() {
+  local amount=$1
+  local to=$2
+  local amount_e8s=$(printf "%.8f" "$amount" | sed -e 's/\.//;s/^0*//')
+  local arg="record {
+               memo = 0;
+               amount = record { e8s = $amount_e8s };
+               fee = record { e8s = $TRANSACTION_FEE };
+               to = \"$to\";
+             }"
+  canister update $IC_LEDGER_ID send_dfx "($arg)"
+}
+
+method=$1
+shift
+case "$method" in
+  create_canister) create_canister $PRINCIPAL $*;;
+  topup_canister) topup_canister $*;;
+  my_balance) balance $ACCOUNT;;
+  balance) balance $*;;
+  send) send $*;;
+  *) echo "Unknown or unsuported method '$method'" > /dev/stderr && exit 1;;
+esac

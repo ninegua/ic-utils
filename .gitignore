@@ -1,3 +1,7 @@
 .vessel
+*.dhall
 dist
-install
+run
+src
+Makefile
+canister_ids.json
