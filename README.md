@@ -16,7 +16,7 @@ To better cope with the growing complexity, we should:
 
 - [x] Tools for interacting with system canisters on the IC including the ledger.
 - [x] Makefile based command line workflow including
-  - [x] Create, topup, install, and call canisters (without using cycles wallets).
+  - [x] Create, top-up, install, and call canisters (without using cycles wallets).
   - [ ] Uninstall canisters after collecting remaining cycles.
 - [x] Interacting with IC.
 - [ ] Running a local replica for testing.
@@ -30,21 +30,26 @@ To better cope with the growing complexity, we should:
 ### Get started
 
 Download a binary release package and unpack it somewhere on the system.
-There are several commands in the `bin` sub-directory, and one of them is `ic-init-project`.
-The following command sets up a `Makefile` in the current directory:
+It includes a few other IC tools and binaries: [quill], [keysmith], `moc` from [Motoko], `icx` from [agent-rs].
+Please feel free to include the unpacked `bin` sub-directory in your `PATH` environment, but this is not required.
+
+One of the command in the unpacked `bin` sub-directory is `ic-init-project`.
+As an example, you can setup a `Makefile` in the current directory like this:
 
 ```
 ic-init-project .
 ```
 
-It requires a few system tools like `make` from [GNU Make], `protoc` from [protobuf], [jq] and [xxd], and will give error if not found.
-Most likely you can get all of them from the standard package installation of your distro.
+It will first check the existence of a few system tools (`make` from [GNU Make], `protoc` from [protobuf], [jq] and [xxd]) in `PATH`.
+Most likely you can have all of them installed via the preferred package installation of your distro.
 
-It also requires the `PEM_FILE` environment variable to point to a PEM file that has your private key of the principal you use for development.
-You can use what `dfx` uses, e.g. `~/.config/dfx/identity/default/identity.pem`, or create a new one using [keysmith].
+To use the `Makefile` once it is setup, you also need to set the `PEM_FILE` environment variable.
+It has to point to a file holding the private key of the principal you want to use for development.
+If you have used `dfx`, it usually is `~/.config/dfx/identity/default/identity.pem`.
+Or create a new one using [keysmith].
 This is required for creating and installing canisters on the IC, and you will need some ICPs on this account to pay for cycles too.
 
-Here is an example of starting the example "hello" project:
+You can try it out by playing with a sample "hello" project:
 ```
 make init-hello
 ```
@@ -80,9 +85,19 @@ file 'canister_ids.json'. Make sure you don't lose this file, otherwise
 you may lose access to your canisters if you don't have their ids.
 ```
 
+What is nice of using `Makefile` is that a command like `make call/...` will perform a pre-requisite steps before calling the canister.
+This includes compiling Wasm, creating, installing or updating canisters, and so on.
+Making a change to the source code, and you will see the code gets automatically re-compiled and re-installed before a call is made.
+
+Start build now by editing the `Makefile`!
+
+Built products like Wasm and Candid files are put in `dist` sub-directory, and network installation status are put in the `run` sub-directory.
+But permanent canister IDs on IC are recorded in `canister_ids.json` file.
+You are advised to make backups of this file or track this file in your git repository.
+
 ### Development
 
-If you want to contribute to this project, the fastest way to develop is to install [nix] and run `nix-shell`, which will launch you in a shell with all required dependendies ready to use.
+If you want to contribute to this project, the fastest way to develop is to install [nix] and run `nix-shell`, which will launch you in a shell with all required dependencies ready to use.
 
 [Motoko]: https://github.com/dfinity/motoko
 [Canisters]: https://sdk.dfinity.org/docs/developers-guide/concepts/canisters-code.html
@@ -91,6 +106,10 @@ If you want to contribute to this project, the fastest way to develop is to inst
 [Makefile]: https://www.gnu.org/software/make/manual/make.html
 [nix]: https://nixos.org/nix
 [GNU Make]: https://www.gnu.org/software/make
-[protoc]: https://developers.google.com/protocol-buffers/docs/downloads
+[protobuf]: https://developers.google.com/protocol-buffers/docs/downloads
 [jq]: https://stedolan.github.io/jq/download
 [xxd]: https://github.com/ConorOG/xxd
+[keysmith]: https://github.com/dfinity/keysmith
+[quill]: https://github.com/dfinity/quill
+[agent-rs]: https://github.com/dfinity/agent-rs
+[vessel]: https://github.com/dfinity/vessel
