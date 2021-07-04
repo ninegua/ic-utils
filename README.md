@@ -19,7 +19,7 @@ To better cope with the growing complexity, we should:
   - [x] Create, topup, install, and call canisters (without using cycles wallets).
   - [ ] Uninstall canisters after collecting remaining cycles.
 - [x] Interacting with IC.
-- [ ] Interacting with a local replica. 
+- [ ] Running a local replica for testing.
 - [x] Project setup for [Motoko] backend.
 - [ ] Project setup for JS frontend.
 - [ ] Project setup for C and Rust backends.
@@ -37,9 +37,12 @@ The following command sets up a `Makefile` in the current directory:
 ic-init-project .
 ```
 
-You need to set the `PEM_FILE` environment to the PEM file that has your private key to create and install canisters on the IC.
-You can either point to the same file that `dfx` uses, e.g. `~/.config/dfx/identity/default/identity.pem` if you use its default identity.
-Or you can create a new one using `keysmith`.
+It requires a few system tools like `make` from [GNU Make], `protoc` from [protobuf], [jq] and [xxd], and will give error if not found.
+Most likely you can get all of them from the standard package installation of your distro.
+
+It also requires the `PEM_FILE` environment variable to point to a PEM file that has your private key of the principal you use for development.
+You can use what `dfx` uses, e.g. `~/.config/dfx/identity/default/identity.pem`, or create a new one using [keysmith].
+This is required for creating and installing canisters on the IC, and you will need some ICPs on this account to pay for cycles too.
 
 Here is an example of starting the example "hello" project:
 ```
@@ -87,3 +90,7 @@ If you want to contribute to this project, the fastest way to develop is to inst
 [dfx]: https://sdk.dfinity.org/docs/developers-guide/install-upgrade-remove.html
 [Makefile]: https://www.gnu.org/software/make/manual/make.html
 [nix]: https://nixos.org/nix
+[GNU Make]: https://www.gnu.org/software/make
+[protoc]: https://developers.google.com/protocol-buffers/docs/downloads
+[jq]: https://stedolan.github.io/jq/download
+[xxd]: https://github.com/ConorOG/xxd
