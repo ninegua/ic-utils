@@ -93,7 +93,7 @@ Start build now by editing the `Makefile`!
 
 Built products like Wasm and Candid files are put in `dist` sub-directory, and network installation status are put in the `run` sub-directory.
 But permanent canister IDs on IC are recorded in `canister_ids.json` file.
-You are advised to make backups of this file or track this file in your git repository.
+You are advised to make backups of this file or track it in your git repository.
 
 ### Development
 
