@@ -34,7 +34,7 @@ It includes a few other IC tools and binaries: [quill], [keysmith], `moc` from [
 Please feel free to include the unpacked `bin` sub-directory in your `PATH` environment, but this is not required.
 
 One of the command in the unpacked `bin` sub-directory is `ic-init-project`.
-As an example, you can setup a `Makefile` in the current directory like this:
+As an example, you can setup a `Makefile` in a new or existing directory like this:
 
 ```
 ic-init-project .
@@ -85,9 +85,9 @@ file 'canister_ids.json'. Make sure you don't lose this file, otherwise
 you may lose access to your canisters if you don't have their ids.
 ```
 
-What is nice of using `Makefile` is that a command like `make call/...` will perform a pre-requisite steps before calling the canister.
-This includes compiling Wasm, creating, installing or updating canisters, and so on.
-Making a change to the source code, and you will see the code gets automatically re-compiled and re-installed before a call is made.
+What is nice of using `Makefile` is that a command like `make call/...` will perform all prerequisite steps before calling the canister.
+This may include compiling Wasm, creating, installing or updating canisters, and so on.
+It is a big time saver when it comes to source code editing and testing loops.
 
 Start build now by editing the `Makefile`!
 
