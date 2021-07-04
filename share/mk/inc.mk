@@ -130,7 +130,7 @@ run/ic/canister_id-%: canister_ids.json| $(RUN_DIR) check-IC check-PEM NETWORK_I
 		echo "Need ICP to create a canister on IC" && exit 1
 	test "$$canister_id" = null && \
 		NETWORK="$(NETWORK)" ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
-			ledger create_canister $(ICP) > $(OUT_FILE) && \
+			canister-ledger create_canister $(ICP) > $(OUT_FILE) && \
 		test -s $(OUT_FILE) && \
 		cp $(OUT_FILE) $@ && canister_id=$$(cat $@)
 	cat canister_ids.json |jq ".$* += {\"$(NETWORK)\": \"$$canister_id\"}" > $(OUT_FILE) && \
@@ -140,7 +140,7 @@ run/ic/canister_id-%: canister_ids.json| $(RUN_DIR) check-IC check-PEM NETWORK_I
 $(RUN_DIR)/canister_id-%:| $(RUN_DIR) check-IC check-PEM NETWORK_IS_NOT_IC
 	@echo 'On $(IC) create an empty canister "$*" with 10 TC'
 	NETWORK="$(NETWORK)" ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
-		ic provisional_create_canister > $(OUT_FILE)
+		canister-ic provisional_create_canister > $(OUT_FILE)
 	test -s $(OUT_FILE) && cat $(OUT_FILE) | cut -d\" -f2 > $@ && rm -f $(RUN_DIR)/installed-$*
 
 create_canister: $(RUN_DIR_CANISTER_ID) | check-IC check-PEM check-NAME
@@ -148,17 +148,17 @@ create_canister: $(RUN_DIR_CANISTER_ID) | check-IC check-PEM check-NAME
 canister_topup:| check-IC check-NAME check-CANISTER_ID check-ICP
 	@echo 'On $(IC) top-up canister "$(NAME)" $(CANISTER_ID)'
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
-		ledger topup_canister $(CANISTER_ID) $(ICP)
+		canister-ledger topup_canister $(CANISTER_ID) $(ICP)
 
 canister_status:| check-IC check-NAME check-CANISTER_ID
 	@echo 'On $(IC) getting canister_status of "$(NAME)" $(CANISTER_ID)'
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
-		ic canister_status $(CANISTER_ID) $(METHOD)
+		canister-ic canister_status $(CANISTER_ID) $(METHOD)
 
 install_code: dist/$(NAME)$(WASM_OPT).wasm | check-IC check-NAME check-PEM check-CANISTER_ID
 	@echo 'On $(IC) $(MODE) "$(NAME)" $(CANISTER_ID)'
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" MODE="$(MODE)" \
-		ic install_code $(CANISTER_ID) "$<" && \
+		canister-ic install_code $(CANISTER_ID) "$<" && \
 		echo 'Installed canister "$(NAME)" ($(CANISTER_ID)).'
 
 call:| check-IC check-NAME check-METHOD check-ARG check-CANISTER_ID
