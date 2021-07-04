@@ -90,20 +90,8 @@ settings: check-PEM check-IC
 	@echo "RUN_DIR=$(RUN_DIR)"
 	@echo "PEM=$(PEM)"
 
-dist:
-	@mkdir -p $@
-
 $(RUN_DIR):
 	@mkdir -p $@
-
-dist/%.wasm: src/%.mo | dist
-	moc $$(vessel sources) -o $@ $<
-
-dist/%-opt.wasm: dist/%.wasm
-	wasm-opt -O2 -o $@ $<
-
-dist/%.did: src/%.mo | dist
-	moc $$(vessel sources) --idl -o $@ $<
 
 .PRECIOUS: $(RUN_DIR)/canister_id-% $(RUN_DIR)/installed-% dist/%-opt.wasm
 

@@ -12,4 +12,13 @@ clean:
 really-clean: clean
 	rm -rf run
 
+dist:
+	@mkdir -p $@
+
+dist/%.wasm: src/%.mo | dist
+	moc $$(vessel sources) -o $@ $<
+
+dist/%.did: src/%.mo | dist
+	moc $$(vessel sources) --idl -o $@ $<
+
 .PHONY: build clean really-clean
