@@ -71,6 +71,10 @@ The 'call' and 'query' actions must take additional parameters:
 
 Set variable IC to use with an existing replica running on a local port.
 For example: 'IC=http://localhost:8000'.
+
+All canisters installed on IC will have their canister IDs stored in
+file 'canister_ids.json'. Make sure you don't lose this file, otherwise
+your canisters may become inaccessible if you don't have their IDs.
 ```
 
 ### Development

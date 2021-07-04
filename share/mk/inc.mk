@@ -172,7 +172,8 @@ help:
 	@echo
 	@echo "Set variable IC to use with an existing replica running on a local port."
 	@echo "For example: 'IC=http://localhost:8000'."
-
-.PHONY: init-vessel init-hello help
-
-
+	@echo
+	@echo "All canisters installed in IC will have their canister ids created in"
+	@echo "file 'canister_ids.json'. Make sure you don't lose this file, otherwise"
+	@echo "you may lose access to your canisters if you don't have their ids."
+	@echo ".PHONY: init-vessel init-hello help"
