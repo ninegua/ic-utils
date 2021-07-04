@@ -48,7 +48,7 @@ in stdenv.mkDerivation {
   version = "0.1.0-pre";
   phases = [ "installPhase" ];
   installPhase = ''
-    mkdir -p $out/{bin,sbin}
+    mkdir -p $out/bin
     install -s -m 755 ${icx}/bin/* $out/bin/
     install -s -m 755 ${icx-proxy}/bin/* $out/bin/
     install -s -m 755 ${motoko}/bin/* $out/bin/
