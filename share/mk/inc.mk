@@ -12,8 +12,43 @@ MEMO_CREATE_CANISTER=0x41455243
 MEMO_TOP_UP_CANISTER=0x50555054
 TRANSACTION_FEE=10_000
 
-# Default installation mode
-INSTALL_MODE?=reinstall
+# Default is to upgrade, which will fail if canister not already installed.
+MODE?=upgrade
+
+help:
+	@echo "The following are examples of using this Makefile, assuming you have a"
+	@echo "project called 'hello' written in 'src/hello.mo'."
+	@echo
+	@echo "Install to IC, and initialize it with cycles converted from 0.02 ICPs:"
+	@echo
+	@echo "    make install/hello ICP=0.02 MODE=install"
+	@echo
+	@echo "Call its method 'greet' with an argument:"
+	@echo
+	@echo "    make call/hello METHOD=greet ARG='(\"world\")'"
+	@echo
+	@echo "Commonly used make targets are in the form of '<action>/<canister>'."
+	@echo "The <action> is one of: 'install', 'topup', 'status', 'call' and 'query'."
+	@echo
+	@echo "Commonly used variable settings:"
+	@echo
+	@echo "  METHOD    method name to call on the canister"
+	@echo "  ARG       argument list encoded in Candid text format."
+	@echo "  MODE      one of 'install', 'reinstall' and 'upgrade' (default)"
+	@echo "  IC        network URI, e.g. 'http://localhost:8000' for a local setup."
+	@echo
+	@echo "All canisters installed in IC will have their canister ids created in"
+	@echo "file 'canister_ids.json'. Make sure you don't lose this file, otherwise"
+	@echo "you may lose access to your canisters if you don't have their ids."
+
+init-vessel:
+	vessel init
+
+init-hello: init-vessel
+	mkdir -p src
+	cp $(UTIL_DIR)/share/example/hello.mo src/
+
+.PHONY: help init-vessel init-hello
 
 # Network related settings
 ifndef IC
@@ -43,6 +78,9 @@ ifndef ERR_FILE
   ERR_FILE:=$(shell mktemp -u)
 endif
 
+# binaryen wasm-opt support is optional
+WASM_OPT:=$(shell command -v wasm-opt 2>&1 >/dev/null && echo "-opt")
+
 settings: check-PEM check-IC
 	@echo "IC=$(IC)"
 	@echo "NETWORK=$(NETWORK)"
@@ -59,14 +97,14 @@ dist/%.wasm: src/%.mo | dist
 	moc $$(vessel sources) -o $@ $<
 
 dist/%-opt.wasm: dist/%.wasm
-	ic-cdk-optimizer -o $@ $<
+	wasm-opt -O2 -o $@ $<
 
 dist/%.did: src/%.mo | dist
 	moc $$(vessel sources) --idl -o $@ $<
 
 .PRECIOUS: $(RUN_DIR)/canister_id-% $(RUN_DIR)/installed-% dist/%-opt.wasm
 
-$(RUN_DIR)/installed-%: $(RUN_DIR)/canister_id-% dist/%-opt.wasm | $(RUN_DIR)
+$(RUN_DIR)/installed-%: $(RUN_DIR)/canister_id-% dist/%.wasm | $(RUN_DIR)
 	@$(MAKE) --no-print-directory install_code NAME=$(subst $(RUN_DIR)/installed-,,$@) && touch $@
 
 install/%: $(RUN_DIR)/installed-%
@@ -126,9 +164,9 @@ canister_status:| check-IC check-NAME check-CANISTER_ID
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
 		"$(UTIL_DIR)/bin/ic" canister_status $(CANISTER_ID) $(METHOD)
 
-install_code: dist/$(NAME)-opt.wasm | check-IC check-NAME check-PEM check-CANISTER_ID
-	@echo 'On $(IC) $(INSTALL_MODE) "$(NAME)" $(CANISTER_ID)'
-	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" INSTALL_MODE="$(INSTALL_MODE)" \
+install_code: dist/$(NAME)$(WASM_OPT).wasm | check-IC check-NAME check-PEM check-CANISTER_ID
+	@echo 'On $(IC) $(MODE) "$(NAME)" $(CANISTER_ID)'
+	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" MODE="$(MODE)" \
 		"$(UTIL_DIR)/bin/ic" install_code $(CANISTER_ID) "$<" && \
 		echo 'Installed canister "$(NAME)" ($(CANISTER_ID)).'
 
@@ -143,37 +181,3 @@ query:| check-IC check-NAME check-PEM check-METHOD check-ARG
 		"$(UTIL_DIR)/bin/canister" query $(CANISTER_ID) $(METHOD) '$(ARG)'
 
 .PHONY: install_code call query check-% install/% status/% call/% query/% topup/%
-
-init-vessel:
-	vessel init
-
-init-hello: init-vessel
-	mkdir -p src
-	cp $(UTIL_DIR)/share/example/hello.mo src/
-
-help:
-	@echo "The following are examples of using this Makefile, assuming you have a"
-	@echo "project called 'hello' written in 'src/hello.mo'."
-	@echo
-	@echo "Install to IC, and initialize it with cycles converted from 0.02 ICPs:"
-	@echo
-	@echo "    make install/hello ICP=0.02"
-	@echo
-	@echo "Call its method 'greet' with an argument:"
-	@echo 
-	@echo "    make call/hello METHOD=greet ARG='(\"world\")'"
-	@echo
-	@echo "Commonly used make targets are in the form of '<action>/<canister>'."
-	@echo "The <action> is one of: 'install', 'topup', 'status', 'call' and 'query'."
-	@echo
-	@echo "The 'call' and 'query' actions must take additional parameters:"
-	@echo "- METHOD is the function name"
-	@echo "- ARG is the argument list encoded in Candid text format."
-	@echo
-	@echo "Set variable IC to use with an existing replica running on a local port."
-	@echo "For example: 'IC=http://localhost:8000'."
-	@echo
-	@echo "All canisters installed in IC will have their canister ids created in"
-	@echo "file 'canister_ids.json'. Make sure you don't lose this file, otherwise"
-	@echo "you may lose access to your canisters if you don't have their ids."
-	@echo ".PHONY: init-vessel init-hello help"

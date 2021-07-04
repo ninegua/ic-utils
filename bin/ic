@@ -23,7 +23,7 @@ function install_code() {
   local canister_id=$1
   local bytes=$(xxd -p "$2" | sed -e 's/../\\&/g' | tr -d '\n')
   echo "(record {
-           mode = variant { $INSTALL_MODE }; 
+           mode = variant { $MODE };
            canister_id = principal \"$canister_id\";
            wasm_module = blob \"$bytes\";
            arg = blob \"\"; })" | canister update $IC_MANAGEMENT_ID install_code -

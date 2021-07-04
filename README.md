@@ -56,7 +56,7 @@ project called 'hello' written in 'src/hello.mo'.
 
 Install to IC, and initialize it with cycles converted from 0.02 ICPs:
 
-    make install/hello ICP=0.02
+    make install/hello ICP=0.02 MODE=install
 
 Call its method 'greet' with an argument:
 
@@ -65,16 +65,16 @@ Call its method 'greet' with an argument:
 Commonly used make targets are in the form of '<action>/<canister>'.
 The <action> is one of: 'install', 'topup', 'status', 'call' and 'query'.
 
-The 'call' and 'query' actions must take additional parameters:
-- METHOD is the function name
-- ARG is the argument list encoded in Candid text format.
+Commonly used variable settings:
 
-Set variable IC to use with an existing replica running on a local port.
-For example: 'IC=http://localhost:8000'.
+  METHOD    method name to call on the canister
+  ARG       argument list encoded in Candid text format.
+  MODE      one of 'install', 'reinstall' and 'upgrade' (default)
+  IC        network URI, e.g. 'http://localhost:8000' for a local setup.
 
-All canisters installed on IC will have their canister IDs stored in
+All canisters installed in IC will have their canister ids created in
 file 'canister_ids.json'. Make sure you don't lose this file, otherwise
-your canisters may become inaccessible if you don't have their IDs.
+you may lose access to your canisters if you don't have their ids.
 ```
 
 ### Development
