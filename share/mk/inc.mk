@@ -70,6 +70,7 @@ $(RUN_DIR)/installed-%: $(RUN_DIR)/canister_id-% dist/%-opt.wasm | $(RUN_DIR)
 	@$(MAKE) --no-print-directory install_code NAME=$(subst $(RUN_DIR)/installed-,,$@) && touch $@
 
 install/%: $(RUN_DIR)/installed-%
+	@:
 
 topup/%:
 	@$(MAKE) --no-print-directory canister_topup NAME=$(subst topup/,,$@)
