@@ -43,9 +43,8 @@ let
     in !(baseName == "dist-newstyle" || lib.hasSuffix ".vim" baseName)
     && lib.sources.cleanSourceFilter name type;
   cleanSource = src: lib.sources.cleanSourceWith { inherit filter src; };
-in with pkgs;
-stdenv.mkDerivation {
-  name = "ic-util";
+in stdenv.mkDerivation {
+  name = "ic-utils";
   version = "0.1.0-pre";
   phases = [ "installPhase" ];
   installPhase = ''
