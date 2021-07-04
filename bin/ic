@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e -o pipefail
 
-PEM_FILE=${PEM_FILE:-$(echo $PEM_OPT|sed -e 's/^[^ ]* //')}
-PRINCIPAL=$(quill --pem-file $PEM_FILE public-ids|grep Principal|sed -e 's/.*: //')
+PEM_FILE=${PEM_FILE:-$(echo $PEM_OPT | sed -e 's/^[^ ]* //')}
+PRINCIPAL=$(quill --pem-file $PEM_FILE public-ids | grep Principal | sed -e 's/.*: //')
 
 PEM_OPT="--pem $PEM_FILE"
 export PEM_OPT
@@ -21,7 +21,7 @@ function canister_settings() {
 
 function install_code() {
   local canister_id=$1
-  local bytes=$(xxd -p "$2"|sed -e 's/../\\&/g'|tr -d '\n')
+  local bytes=$(xxd -p "$2" | sed -e 's/../\\&/g' | tr -d '\n')
   echo "(record {
            mode = variant { $INSTALL_MODE }; 
            canister_id = principal \"$canister_id\";
@@ -50,9 +50,9 @@ function provisional_top_up_canister() {
 method=$1
 shift
 case "$method" in
-  install_code) install_code $*;;
-  canister_status) canister_status $*;;
-  provisional_create_canister) provisional_create_canister $*;;
-  provisional_top_up_canister) provisional_top_up_canister $*;;
-  *) echo "Unknown or unsuported method '$method'" && exit 1;;
+  install_code) install_code $* ;;
+  canister_status) canister_status $* ;;
+  provisional_create_canister) provisional_create_canister $* ;;
+  provisional_top_up_canister) provisional_top_up_canister $* ;;
+  *) echo "Unknown or unsuported method '$method'" && exit 1 ;;
 esac

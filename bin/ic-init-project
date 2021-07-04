@@ -4,7 +4,7 @@ set -e -o pipefail
 function require() {
   cmd=$1
   pkg=${2:-$cmd}
-  if ! command -v $cmd &> /dev/null; then
+  if ! command -v $cmd &>/dev/null; then
     echo "Error: $cmd is not found, please install $pkg package to your system."
     exit
   fi
@@ -27,14 +27,14 @@ export PATH="$UTIL/bin:$PATH"
 MAKEFILE="$DIR/Makefile"
 test -f "$MAKEFILE" && echo "Error: $MAKEFILE already exists. Please remove it and rerun this command." && exit 1
 
-cat > "$MAKEFILE" <<END
+cat >"$MAKEFILE" <<END
 UTIL_DIR=$UTIL
 include \$(UTIL_DIR)/share/mk/inc.mk
 
 END
-cat "$UTIL/share/mk/top.mk" >> "$MAKEFILE"
+cat "$UTIL/share/mk/top.mk" >>"$MAKEFILE"
 
-cat <<END 
+cat <<END
 Makefile is successfully created. Next steps:
 
 - If you are setting up Motoko project, do:
