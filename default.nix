@@ -10,7 +10,7 @@ stdenv.mkDerivation {
   name = "hello";
   nativeBuildInputs = [
     agent-rs
-    #binaryen
+    binaryen
     gnumake
     jq
     motoko
