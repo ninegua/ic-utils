@@ -1,3 +1,6 @@
+# PATH
+PATH:=$(UTIL_DIR)/bin:$(PATH)
+
 # PEM file that has the private key
 PEM?=${PEM_FILE}
 ifdef PEM
@@ -134,12 +137,12 @@ canister_ids.json:
 .ONESHELL:
 run/ic/canister_id-%: canister_ids.json| $(RUN_DIR) check-IC check-PEM NETWORK_IS_IC
 	@canister_id=$$(cat canister_ids.json|jq -r ".$*|.$(NETWORK)")
-	test "$$canister_id" != null && echo "$$canister_id" > $@
+	test "$$canister_id" != null && test ! -f $@ && echo "$$canister_id" > $@
 	test "$$canister_id" = null -a -z "$$ICP" && \
 		echo "Need ICP to create a canister on IC" && exit 1
 	test "$$canister_id" = null && \
 		NETWORK="$(NETWORK)" ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
-			"$(UTIL_DIR)/bin/ledger" create_canister $(ICP) > $(OUT_FILE) && \
+			ledger create_canister $(ICP) > $(OUT_FILE) && \
 		test -s $(OUT_FILE) && \
 		cp $(OUT_FILE) $@ && canister_id=$$(cat $@)
 	cat canister_ids.json |jq ".$* += {\"$(NETWORK)\": \"$$canister_id\"}" > $(OUT_FILE) && \
@@ -149,7 +152,7 @@ run/ic/canister_id-%: canister_ids.json| $(RUN_DIR) check-IC check-PEM NETWORK_I
 $(RUN_DIR)/canister_id-%:| $(RUN_DIR) check-IC check-PEM NETWORK_IS_NOT_IC
 	@echo 'On $(IC) create an empty canister "$*" with 10 TC'
 	NETWORK="$(NETWORK)" ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
-		"$(UTIL_DIR)/bin/ic" provisional_create_canister > $(OUT_FILE)
+		ic provisional_create_canister > $(OUT_FILE)
 	test -s $(OUT_FILE) && cat $(OUT_FILE) | cut -d\" -f2 > $@ && rm -f $(RUN_DIR)/installed-$*
 
 create_canister: $(RUN_DIR_CANISTER_ID) | check-IC check-PEM check-NAME
@@ -157,27 +160,27 @@ create_canister: $(RUN_DIR_CANISTER_ID) | check-IC check-PEM check-NAME
 canister_topup:| check-IC check-NAME check-CANISTER_ID check-ICP
 	@echo 'On $(IC) top-up canister "$(NAME)" $(CANISTER_ID)'
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
-		"$(UTIL_DIR)/bin/ledger" topup_canister $(CANISTER_ID) $(ICP)
+		ledger topup_canister $(CANISTER_ID) $(ICP)
 
 canister_status:| check-IC check-NAME check-CANISTER_ID
 	@echo 'On $(IC) getting canister_status of "$(NAME)" $(CANISTER_ID)'
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
-		"$(UTIL_DIR)/bin/ic" canister_status $(CANISTER_ID) $(METHOD)
+		ic canister_status $(CANISTER_ID) $(METHOD)
 
 install_code: dist/$(NAME)$(WASM_OPT).wasm | check-IC check-NAME check-PEM check-CANISTER_ID
 	@echo 'On $(IC) $(MODE) "$(NAME)" $(CANISTER_ID)'
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" MODE="$(MODE)" \
-		"$(UTIL_DIR)/bin/ic" install_code $(CANISTER_ID) "$<" && \
+		ic install_code $(CANISTER_ID) "$<" && \
 		echo 'Installed canister "$(NAME)" ($(CANISTER_ID)).'
 
 call:| check-IC check-NAME check-METHOD check-ARG check-CANISTER_ID
 	@echo 'On $(IC) calling "$(NAME)" $(CANISTER_ID): $(METHOD) $(ARG)'
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" DID_OPT="$(DID_OPT)" \
-		"$(UTIL_DIR)/bin/canister" update $(CANISTER_ID) $(METHOD) '$(ARG)'
+		canister update $(CANISTER_ID) $(METHOD) '$(ARG)'
 
 query:| check-IC check-NAME check-PEM check-METHOD check-ARG
 	@echo 'On $(IC) querying "$(NAME)" $(CANISTER_ID): $(METHOD) $(ARG)'
 	PEM_OPT="$(PEM_OPT)" IC="$(IC)" DID_OPT="$(DID_OPT)" \
-		"$(UTIL_DIR)/bin/canister" query $(CANISTER_ID) $(METHOD) '$(ARG)'
+		canister query $(CANISTER_ID) $(METHOD) '$(ARG)'
 
 .PHONY: install_code call query check-% install/% status/% call/% query/% topup/%
