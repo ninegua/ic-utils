@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 set -e -o pipefail
 
+function require() {
+  cmd=$1
+  pkg=${2:-$cmd}
+  if ! command -v $cmd &> /dev/null; then
+    echo "Error: $cmd is not found, please install $pkg package to your system."
+    exit
+  fi
+}
+
+require make gnumake
+require protoc protobuf
+require jq
+require xxd
+
 USAGE="USAGE: $0 <project_dir>"
 
 DIR=$1

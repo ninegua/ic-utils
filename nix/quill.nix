@@ -5,11 +5,12 @@ stdenv.mkDerivation (rec {
   phases = [ "installPhase" ];
   installPhase = ''
     mkdir -p $out/bin
-    cp $src $out/bin/quill
+    cp $quill $out/bin/quill
     chmod a+x $out/bin/quill
   '';
-  src = fetchurl {
-    url = "https://github.com/dfinity/quill/releases/download/v${version}/quill-linux-x86_64";
+  quill = fetchurl {
+    url =
+      "https://github.com/dfinity/quill/releases/download/v${version}/quill-linux-x86_64";
     sha256 = "1msgj7y8b0bh0sq14msa5jqwfn9yzwiin5l276qz0h0wjqmnndbs";
   };
 })

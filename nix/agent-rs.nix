@@ -1,13 +1,22 @@
-{ rustPlatform, openssl, pkg-config }:
-rustPlatform.buildRustPackage rec {
+{ fetchurl, stdenv }:
+stdenv.mkDerivation (rec {
   pname = "agent-rs";
-  version = "1.0.0";
-  buildInputs = [ openssl ];
-  nativeBuildInputs = [ pkg-config ];
-  src = builtins.fetchGit {
-    url = "https://github.com/ninegua/agent-rs";
-    rev = "0794b530ce457418850e239aed3c3b29bec69da6";
+  version = "static-release-build";
+  phases = [ "installPhase" ];
+  installPhase = ''
+    mkdir -p $out/bin
+    cp $icx $out/bin/icx
+    cp $icxproxy $out/bin/icx-proxy
+    chmod a+x $out/bin/*
+  '';
+  icx = fetchurl {
+    url =
+      "https://github.com/ninegua/agent-rs/releases/download/${version}/icx-linux-x86_64";
+    sha256 = "0f8xhw7rxjsa6jjyh8f49h3xrar479pmaf1byxlyrwsb2bi93c9v";
   };
-  cargoSha256 = "0616yijw98bp6hxlg1ijg8ir09f9rsprw9ni643bjbd6109vn4g7";
-  verifyCargoDeps = true;
-}
+  icxproxy = fetchurl {
+    url =
+      "https://github.com/ninegua/agent-rs/releases/download/${version}/icx-proxy-linux-x86_64";
+    sha256 = "1flhcvlz5s1gzs09ss3s2lz1vj3f4xw714r8z2c7hzxkb9k7ah4r";
+  };
+})
