@@ -2,6 +2,13 @@
 with pkgs;
 let
   download = callPackage ./nix/download.nix;
+  didc = download (rec {
+    name = "didc";
+    version = "linux-static-build";
+    url =
+      "https://github.com/ninegua/candid/releases/download/${version}/didc-linux-musl-x86_64";
+    sha256 = "0gxjhqkyvlf6jcnmiqhri08qyap6sdd433z3pzc975d37x4rgblq";
+  });
   icx = download (rec {
     name = "icx";
     version = "static-release-build";
@@ -49,6 +56,7 @@ in stdenv.mkDerivation {
   phases = [ "installPhase" ];
   installPhase = ''
     mkdir -p $out/bin
+    install -s -m 755 ${didc}/bin/* $out/bin/
     install -s -m 755 ${icx}/bin/* $out/bin/
     install -s -m 755 ${icx-proxy}/bin/* $out/bin/
     install -s -m 755 ${motoko}/bin/* $out/bin/
@@ -61,6 +69,7 @@ in stdenv.mkDerivation {
   src = cleanSource ./.;
   nativeBuildInputs = [
     binaryen
+    didc
     gnumake
     icx
     icx-proxy

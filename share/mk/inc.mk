@@ -3,7 +3,7 @@ PATH:=$(UTIL_DIR)/bin:$(PATH)
 
 # PEM file that has the private key
 PEM?=${PEM_FILE}
-ifdef PEM
+ifneq ($(PEM),)
   PEM_OPT=--pem $(PEM)
 endif
 
@@ -93,7 +93,10 @@ settings: check-PEM check-IC
 $(RUN_DIR):
 	@mkdir -p $@
 
-.PRECIOUS: $(RUN_DIR)/canister_id-% $(RUN_DIR)/installed-% dist/%-opt.wasm
+dist/%-opt.wasm: dist/%.wasm
+	wasm-opt -O2 -o $@ $<
+
+.PRECIOUS: $(RUN_DIR)/canister_id-% $(RUN_DIR)/installed-% dist/%.wasm dist/%-opt.wasm dist/%.idl
 
 $(RUN_DIR)/installed-%: $(RUN_DIR)/canister_id-% dist/%.wasm | $(RUN_DIR)
 	@$(MAKE) --no-print-directory install_code NAME=$(subst $(RUN_DIR)/installed-,,$@) && touch $@
@@ -123,7 +126,7 @@ canister_ids.json:
 	echo {} > $@
 
 .ONESHELL:
-run/ic/canister_id-%: canister_ids.json| $(RUN_DIR) check-IC check-PEM NETWORK_IS_IC
+run/ic/canister_id-%: canister_ids.json| $(RUN_DIR) check-IC NETWORK_IS_IC
 	@canister_id=$$(cat canister_ids.json|jq -r ".$*|.$(NETWORK)")
 	test "$$canister_id" != null && test ! -f $@ && echo "$$canister_id" > $@
 	test "$$canister_id" = null -a -z "$$ICP" && \
@@ -137,7 +140,7 @@ run/ic/canister_id-%: canister_ids.json| $(RUN_DIR) check-IC check-PEM NETWORK_I
 		mv $(OUT_FILE) canister_ids.json
 
 .ONESHELL:
-$(RUN_DIR)/canister_id-%:| $(RUN_DIR) check-IC check-PEM NETWORK_IS_NOT_IC
+$(RUN_DIR)/canister_id-%:| $(RUN_DIR) check-IC NETWORK_IS_NOT_IC
 	@echo 'On $(IC) create an empty canister "$*" with 10 TC'
 	NETWORK="$(NETWORK)" ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
 		canister-ic provisional_create_canister > $(OUT_FILE)
@@ -158,7 +161,7 @@ canister_status:| check-IC check-NAME check-CANISTER_ID
 install_code: dist/$(NAME)$(WASM_OPT).wasm | check-IC check-NAME check-PEM check-CANISTER_ID
 	@echo 'On $(IC) $(MODE) "$(NAME)" $(CANISTER_ID)'
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" MODE="$(MODE)" \
-		canister-ic install_code $(CANISTER_ID) "$<" && \
+		canister-ic install_code $(CANISTER_ID) "$<" '$(ARG)' && \
 		echo 'Installed canister "$(NAME)" ($(CANISTER_ID)).'
 
 call:| check-IC check-NAME check-METHOD check-ARG check-CANISTER_ID

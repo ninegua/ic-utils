@@ -158,10 +158,10 @@ function send() {
 method=$1
 shift
 case "$method" in
-  create_canister) create_canister $PRINCIPAL $* ;;
-  topup_canister) topup_canister $* ;;
-  my_balance) balance $ACCOUNT ;;
-  balance) balance $* ;;
-  send) send $* ;;
+  create_canister) create_canister $PRINCIPAL "$1" "$2" ;;
+  topup_canister) topup_canister "$1" "$2" ;;
+  my_balance) balance "$ACCOUNT" ;;
+  balance) balance "$1" ;;
+  send) send "$1" "$2" ;;
   *) echo "Unknown or unsuported method '$method'" >/dev/stderr && exit 1 ;;
 esac

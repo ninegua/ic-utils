@@ -22,11 +22,17 @@ function canister_settings() {
 function install_code() {
   local canister_id=$1
   local bytes=$(xxd -p "$2" | sed -e 's/../\\&/g' | tr -d '\n')
+  local arg
+  if [[ -n "$3" ]]; then
+    arg="$(didc encode "$3" -f blob)"
+  else
+    arg='blob ""'
+  fi
   echo "(record {
            mode = variant { $MODE };
            canister_id = principal \"$canister_id\";
            wasm_module = blob \"$bytes\";
-           arg = blob \"\"; })" | canister update $IC_MANAGEMENT_ID install_code -
+           arg = $arg; })" | canister update $IC_MANAGEMENT_ID install_code -
 }
 
 function canister_status() {
@@ -50,9 +56,9 @@ function provisional_top_up_canister() {
 method=$1
 shift
 case "$method" in
-  install_code) install_code $* ;;
-  canister_status) canister_status $* ;;
-  provisional_create_canister) provisional_create_canister $* ;;
-  provisional_top_up_canister) provisional_top_up_canister $* ;;
+  install_code) install_code "$1" "$2" "$3" ;;
+  canister_status) canister_status "$1" ;;
+  provisional_create_canister) provisional_create_canister ;;
+  provisional_top_up_canister) provisional_top_up_canister "$1" "$2" ;;
   *) echo "Unknown or unsuported method '$method'" && exit 1 ;;
 esac

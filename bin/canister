@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 OUT=$(mktemp)
 ERR=$(mktemp)
-call_type=$1
-canister_id=$2
-method=$3
-arg=$4
+call_type="$1"
+canister_id="$2"
+method="$3"
+arg="$4"
 shift
 icx $ICX_OPT $PEM_OPT $IC "$call_type" $DID_OPT "$canister_id" "$method" $ICX_ARG_OPT "$arg" 1>$OUT 2>$ERR
 
