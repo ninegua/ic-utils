@@ -47,7 +47,7 @@ let
   keysmith = callPackage ./nix/keysmith.nix { };
   filter = name: type:
     let baseName = baseNameOf (toString name);
-    in !(baseName == "dist-newstyle" || lib.hasSuffix ".vim" baseName)
+    in !(baseName == "dist-newstyle" || lib.hasSuffix ".vim" baseName || baseName == "target")
     && lib.sources.cleanSourceFilter name type;
   cleanSource = src: lib.sources.cleanSourceWith { inherit filter src; };
 in stdenv.mkDerivation {
@@ -56,13 +56,13 @@ in stdenv.mkDerivation {
   phases = [ "installPhase" ];
   installPhase = ''
     mkdir -p $out/bin
-    install -s -m 755 ${didc}/bin/* $out/bin/
-    install -s -m 755 ${icx}/bin/* $out/bin/
-    install -s -m 755 ${icx-proxy}/bin/* $out/bin/
-    install -s -m 755 ${motoko}/bin/* $out/bin/
-    install -s -m 755 ${quill}/bin/* $out/bin/
-    install -s -m 755 ${vessel}/bin/* $out/bin/
-    install -s -m 755 ${keysmith}/bin/* $out/bin/
+    install -m 755 ${didc}/bin/* $out/bin/
+    install -m 755 ${icx}/bin/* $out/bin/
+    install -m 755 ${icx-proxy}/bin/* $out/bin/
+    install -m 755 ${motoko}/bin/* $out/bin/
+    install -m 755 ${quill}/bin/* $out/bin/
+    install -m 755 ${vessel}/bin/* $out/bin/
+    install -m 755 ${keysmith}/bin/* $out/bin/
     install -m 755 $src/bin/* $out/bin/
     cp -r $src/share $out/
   '';
@@ -82,5 +82,7 @@ in stdenv.mkDerivation {
     quill
     vessel
     xxd
+    #rustc
+    #cargo
   ];
 }
