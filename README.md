@@ -71,7 +71,8 @@ Call its method 'greet' with an argument:
     make call/hello METHOD=greet ARG='("world")'
 
 Commonly used make targets are in the form of '<action>/<canister>'.
-The <action> is one of: 'install', 'topup', 'status', 'call' and 'query'.
+The <action> is one of: 'install', 'topup', 'status', 'update_settings',
+'call' and 'query'.
 
 Commonly used variable settings:
 

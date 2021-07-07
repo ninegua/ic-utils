@@ -110,6 +110,9 @@ topup/%:
 status/%:
 	@$(MAKE) --no-print-directory canister_status NAME=$(subst status/,,$@)
 
+update_settings/%:
+	@$(MAKE) --no-print-directory update_settings NAME=$(subst update_settings/,,$@)
+
 call/%: $(RUN_DIR)/installed-%
 	@$(MAKE) --no-print-directory call NAME=$(subst call/,,$@) METHOD='$(METHOD)' ARG='$(ARG)'
 
@@ -153,10 +156,15 @@ canister_topup:| check-IC check-NAME check-CANISTER_ID check-ICP
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
 		canister-ledger topup_canister $(CANISTER_ID) $(ICP)
 
-canister_status:| check-IC check-NAME check-CANISTER_ID
+canister_status: $(RUN_DIR_CANISTER_ID) | check-IC check-NAME
 	@echo 'On $(IC) getting canister_status of "$(NAME)" $(CANISTER_ID)'
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
 		canister-ic canister_status $(CANISTER_ID) $(METHOD)
+
+update_settings: $(RUN_DIR_CANISTER_ID) | check-IC check-NAME check-ARG
+	@echo 'On $(IC) update_settings of "$(NAME)" $(CANISTER_ID)'
+	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
+		canister-ic update_settings $(CANISTER_ID) '$(ARG)'
 
 install_code: dist/$(NAME)$(WASM_OPT).wasm | check-IC check-NAME check-PEM check-CANISTER_ID
 	@echo 'On $(IC) $(MODE) "$(NAME)" $(CANISTER_ID)'

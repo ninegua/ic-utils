@@ -40,6 +40,11 @@ function canister_status() {
   canister update $IC_MANAGEMENT_ID canister_status "($arg)"
 }
 
+function update_settings() {
+  local arg="record { canister_id = principal \"$1\"; settings = $2; }"
+  canister update $IC_MANAGEMENT_ID update_settings "($arg)"
+}
+
 function provisional_create_canister() {
   local arg="record {
                amount = opt 10_000_000_000_000;
@@ -58,6 +63,7 @@ shift
 case "$method" in
   install_code) install_code "$1" "$2" "$3" ;;
   canister_status) canister_status "$1" ;;
+  update_settings) update_settings "$1" "$2";;
   provisional_create_canister) provisional_create_canister ;;
   provisional_top_up_canister) provisional_top_up_canister "$1" "$2" ;;
   *) echo "Unknown or unsuported method '$method'" && exit 1 ;;
