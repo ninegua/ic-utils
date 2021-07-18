@@ -129,7 +129,7 @@ canister_ids.json:
 	echo {} > $@
 
 .ONESHELL:
-run/ic/canister_id-%: canister_ids.json| $(RUN_DIR) check-IC NETWORK_IS_IC
+run/ic/canister_id-%: canister_ids.json| $(RUN_DIR) check-IC check-PEM NETWORK_IS_IC
 	@canister_id=$$(cat canister_ids.json|jq -r ".$*|.$(NETWORK)")
 	test "$$canister_id" != null && test ! -f $@ && echo "$$canister_id" > $@
 	test "$$canister_id" = null -a -z "$$ICP" && \
@@ -143,7 +143,7 @@ run/ic/canister_id-%: canister_ids.json| $(RUN_DIR) check-IC NETWORK_IS_IC
 		mv $(OUT_FILE) canister_ids.json
 
 .ONESHELL:
-$(RUN_DIR)/canister_id-%:| $(RUN_DIR) check-IC NETWORK_IS_NOT_IC
+$(RUN_DIR)/canister_id-%:| $(RUN_DIR) check-IC check-PEM NETWORK_IS_NOT_IC
 	@echo 'On $(IC) create an empty canister "$*" with 10 TC'
 	NETWORK="$(NETWORK)" ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
 		canister-ic provisional_create_canister > $(OUT_FILE)
