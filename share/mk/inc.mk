@@ -84,6 +84,9 @@ endif
 # binaryen wasm-opt support is optional
 WASM_OPT:=$(shell command -v wasm-opt 2>&1 >/dev/null && echo "-opt")
 
+info: check-PEM check-IC
+	quill --pem-file $(PEM) public-ids
+
 settings: check-PEM check-IC
 	@echo "IC=$(IC)"
 	@echo "NETWORK=$(NETWORK)"
@@ -99,13 +102,21 @@ dist/%-opt.wasm: dist/%.wasm
 .PRECIOUS: $(RUN_DIR)/canister_id-% $(RUN_DIR)/installed-% dist/%.wasm dist/%-opt.wasm dist/%.idl
 
 $(RUN_DIR)/installed-%: $(RUN_DIR)/canister_id-% dist/%.wasm | $(RUN_DIR)
+	@if [[ "$(MODE)" = "upgrade" ]]; then $(MAKE) --no-print-directory stop_canister NAME=$(subst $(RUN_DIR)/installed-,,$@); fi
 	@$(MAKE) --no-print-directory install_code NAME=$(subst $(RUN_DIR)/installed-,,$@) && touch $@
+	@if [[ "$(MODE)" = "upgrade" ]]; then $(MAKE) --no-print-directory start_canister NAME=$(subst $(RUN_DIR)/installed-,,$@); fi
 
 install/%: $(RUN_DIR)/installed-%
 	@:
 
 topup/%:
 	@$(MAKE) --no-print-directory canister_topup NAME=$(subst topup/,,$@)
+
+start/%:
+	@$(MAKE) --no-print-directory start_canister NAME=$(subst start/,,$@)
+
+stop/%:
+	@$(MAKE) --no-print-directory stop_canister NAME=$(subst stop/,,$@)
 
 status/%:
 	@$(MAKE) --no-print-directory canister_status NAME=$(subst status/,,$@)
@@ -155,6 +166,16 @@ canister_topup:| check-IC check-NAME check-CANISTER_ID check-ICP
 	@echo 'On $(IC) top-up canister "$(NAME)" $(CANISTER_ID)'
 	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
 		canister-ledger topup_canister $(CANISTER_ID) $(ICP)
+
+start_canister:| check-IC check-NAME check-CANISTER_ID
+	@echo 'On $(IC) start canister "$(NAME)" $(CANISTER_ID)'
+	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
+		canister-ic start_canister $(CANISTER_ID)
+
+stop_canister:| check-IC check-NAME check-CANISTER_ID
+	@echo 'On $(IC) stop canister "$(NAME)" $(CANISTER_ID)'
+	ICX_OPT="$(ICX_OPT)" PEM_OPT="$(PEM_OPT)" IC="$(IC)" \
+		canister-ic stop_canister $(CANISTER_ID)
 
 canister_status: $(RUN_DIR_CANISTER_ID) | check-IC check-NAME
 	@echo 'On $(IC) getting canister_status of "$(NAME)" $(CANISTER_ID)'

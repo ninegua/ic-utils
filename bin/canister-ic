@@ -40,6 +40,16 @@ function canister_status() {
   canister update $IC_MANAGEMENT_ID canister_status "($arg)"
 }
 
+function start_canister() {
+  local arg="record { canister_id = principal \"$1\"; }"
+  canister update $IC_MANAGEMENT_ID start_canister "($arg)"
+}
+
+function stop_canister() {
+  local arg="record { canister_id = principal \"$1\"; }"
+  canister update $IC_MANAGEMENT_ID stop_canister "($arg)"
+}
+
 function update_settings() {
   local arg="record { canister_id = principal \"$1\"; settings = $2; }"
   canister update $IC_MANAGEMENT_ID update_settings "($arg)"
@@ -63,6 +73,8 @@ shift
 case "$method" in
   install_code) install_code "$1" "$2" "$3" ;;
   canister_status) canister_status "$1" ;;
+  start_canister) start_canister "$1" ;;
+  stop_canister) stop_canister "$1" ;;
   update_settings) update_settings "$1" "$2";;
   provisional_create_canister) provisional_create_canister ;;
   provisional_top_up_canister) provisional_top_up_canister "$1" "$2" ;;
