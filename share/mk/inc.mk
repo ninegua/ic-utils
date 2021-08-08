@@ -101,7 +101,7 @@ dist/%-opt.wasm: dist/%.wasm
 
 .PRECIOUS: $(RUN_DIR)/canister_id-% $(RUN_DIR)/installed-% dist/%.wasm dist/%-opt.wasm dist/%.idl
 
-$(RUN_DIR)/installed-%: $(RUN_DIR)/canister_id-% dist/%.wasm | $(RUN_DIR)
+$(RUN_DIR)/installed-%: $(RUN_DIR)/canister_id-% dist/%$(WASM_OPT).wasm | $(RUN_DIR)
 	@if [[ "$(MODE)" = "upgrade" ]]; then $(MAKE) --no-print-directory stop_canister NAME=$(subst $(RUN_DIR)/installed-,,$@); fi
 	@$(MAKE) --no-print-directory install_code NAME=$(subst $(RUN_DIR)/installed-,,$@) && touch $@
 	@if [[ "$(MODE)" = "upgrade" ]]; then $(MAKE) --no-print-directory start_canister NAME=$(subst $(RUN_DIR)/installed-,,$@); fi
