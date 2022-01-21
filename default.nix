@@ -25,10 +25,10 @@ let
   });
   motoko = download (rec {
     name = "motoko";
-    version = "0.6.6";
+    version = "0.6.20";
     url =
       "https://github.com/dfinity/motoko/releases/download/${version}/motoko-linux64-${version}.tar.gz";
-    sha256 = "0c450vzyj77g6bxl94q7dh6f98xnr1712w2fmfy2a4nin1s67qkf";
+    sha256 = "0fw2amhdqawsh04pimvb3i28sssf16yb63n18hfm4gmw04scmjm2";
   });
   quill = download (rec {
     name = "quill";
