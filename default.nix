@@ -12,51 +12,51 @@ let
   });
   didc = download (rec {
     name = "didc";
-    version = "linux-static-build";
+    version = "2022-01-06";
     url =
-      "https://github.com/ninegua/candid/releases/download/${version}/didc-linux-musl-x86_64";
-    sha256 = "0gxjhqkyvlf6jcnmiqhri08qyap6sdd433z3pzc975d37x4rgblq";
+      "https://github.com/dfinity/candid/releases/download/${version}/didc-linux64";
+    sha256 = "003pf5jcsm7avc7b83qf90cf8g7xw023a1r8y1cbl94n2hcj5rbg";
   });
   icx = download (rec {
     name = "icx";
-    version = "secp256k1-pem-file";
+    version = "9518bbd";
     url =
-      "https://github.com/ninegua/agent-rs/releases/download/${version}/icx-linux-x86_64";
-    sha256 = "1nxw4wxg2ksc6zhbwj65p51zisrzlv6zl1x4cn3x3r3mysni0qrh";
+      "https://github.com/ninegua/agent-rs/releases/download/${version}/binaries-linux.tar.gz";
+    sha256 = "1jlzkrflrbl491d13q119dfv4rskh0rl3bb0q68dr78xkfb7fyvh";
   });
   icx-proxy = download (rec {
     name = "icx-proxy";
-    version = "secp256k1-pem-file";
+    version = "5967469";
     url =
-      "https://github.com/ninegua/agent-rs/releases/download/${version}/icx-proxy-linux-x86_64";
-    sha256 = "1yy7szs190diljfx7avjs0wr6dfjw3xcbfzh37yifrc745lvaqsw";
+      "https://github.com/dfinity/icx-proxy/releases/download/${version}/binaries-linux.tar.gz";
+    sha256 = "08k7zvchkkwppc18f64dzhfc39sw14pg3lsygv95rpv2v5m0jpm2";
   });
   motoko = download (rec {
     name = "motoko";
-    version = "0.6.20";
+    version = "0.6.21";
     url =
       "https://github.com/dfinity/motoko/releases/download/${version}/motoko-linux64-${version}.tar.gz";
-    sha256 = "0fw2amhdqawsh04pimvb3i28sssf16yb63n18hfm4gmw04scmjm2";
+    sha256 = "1aipcwp69vqnaw4ppx0nxh2ji12k332fg0vr9l0lxjfavqwnvqv4";
   });
   quill = download (rec {
     name = "quill";
-    version = "0.2.0";
+    version = "0.2.14.hsm";
     url =
       "https://github.com/dfinity/quill/releases/download/v${version}/quill-linux-x86_64";
-    sha256 = "1msgj7y8b0bh0sq14msa5jqwfn9yzwiin5l276qz0h0wjqmnndbs";
+    sha256 = "0cqpww4qb7ip7v7h9di1bxw35qrcl8hn5rf36v9sylgx0gc0fval";
   });
   vessel = download (rec {
     name = "vessel";
-    version = "static-linux-build";
+    version = "v0.6.2";
     url =
-      "https://github.com/ninegua/vessel/releases/download/${version}/vessel-linux64-static";
-    sha256 = "0n0scnhm0dzshw5f3gairgr4pl6mg1q66zk2sv9757qfyc9jqsxc";
+      "https://github.com/dfinity/vessel/releases/download/${version}/vessel-linux64";
+    sha256 = "1d0djh2m2m86zrbpwkpr80mfxccr2glxf6kq15hpgx48m74lsmsp";
   });
   keysmith = callPackage ./nix/keysmith.nix { };
   filter = name: type:
     let baseName = baseNameOf (toString name);
-    in !(baseName == "dist-newstyle" || lib.hasSuffix ".vim" baseName || baseName == "target")
-    && lib.sources.cleanSourceFilter name type;
+    in !(baseName == "dist-newstyle" || lib.hasSuffix ".vim" baseName
+      || baseName == "target") && lib.sources.cleanSourceFilter name type;
   cleanSource = src: lib.sources.cleanSourceWith { inherit filter src; };
 in stdenv.mkDerivation {
   name = "ic-utils";
