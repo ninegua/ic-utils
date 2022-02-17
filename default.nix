@@ -2,6 +2,14 @@
 with pkgs;
 let
   download = callPackage ./nix/download.nix;
+  ic-repl = download (rec {
+    name = "ic-repl";
+    version = "0.1.3";
+    url =
+      "https://github.com/chenyan2002/ic-repl/releases/download/${version}/ic-repl-linux64";
+    sha256 = "11ajgkyfr7wprai3kg0sk3qrwdxsr5hz94lm8pkvshnifd7gmb24";
+    buildInputs = [ openssl.out ];
+  });
   didc = download (rec {
     name = "didc";
     version = "linux-static-build";
@@ -82,6 +90,7 @@ in stdenv.mkDerivation {
     quill
     vessel
     xxd
+    ic-repl
     #rustc
     #cargo
   ];
