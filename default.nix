@@ -51,6 +51,7 @@ let
     url =
       "https://github.com/dfinity/vessel/releases/download/${version}/vessel-linux64";
     sha256 = "1d0djh2m2m86zrbpwkpr80mfxccr2glxf6kq15hpgx48m74lsmsp";
+    buildInputs = [ openssl.out ];
   });
   keysmith = callPackage ./nix/keysmith.nix { };
   filter = name: type:
