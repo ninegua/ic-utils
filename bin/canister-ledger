@@ -20,6 +20,7 @@ IC_CYCLES_MINTING_ID=rkp4c-7iaaa-aaaaa-aaaca-cai
 MEMO_CREATE_CANISTER=0x41455243
 MEMO_TOP_UP_CANISTER=0x50555054
 TRANSACTION_FEE=10000
+MEMO=${MEMO:-0}
 
 function principal_to_subaccount() {
   principal=$1
@@ -147,7 +148,7 @@ function send() {
   local to=$2
   local amount_e8s=$(printf "%.8f" "$amount" | sed -e 's/\.//;s/^0*//')
   local arg="record {
-               memo = 0;
+               memo = $MEMO;
                amount = record { e8s = $amount_e8s };
                fee = record { e8s = $TRANSACTION_FEE };
                to = \"$to\";
